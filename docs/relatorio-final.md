@@ -18,8 +18,6 @@ Este relatório consolida o projeto. Ele traz o passo a passo da implementação
 
 ## 1. Arquitetura
 
-![Arquitetura da solução](prints/arquitetura.png)
-
 Uma API de tarefas em Node.js passa por um ciclo DevOps completo:
 
 1. `git push` dispara o **GitHub Actions**.
@@ -215,7 +213,7 @@ Mas é preciso olhar com senso crítico:
 
 | Tempo | Conteúdo | O que mostrar |
 |---|---|---|
-| 0:00–1:00 | Abertura: objetivo e arquitetura | Diagrama de arquitetura (seção 1) |
+| 0:00–1:00 | Abertura: objetivo e arquitetura | Seção 1 do relatório final |
 | 1:00–2:30 | Conceitos (Etapa 1): DevOps × ágil, CI × Delivery × Deployment, VM × container | Tabelas e analogias do [relatório da Etapa 1](relatorio-etapa1.md) |
 | 2:30–5:00 | **Demo do pipeline**: alterar algo (ex.: o texto em `app/public/index.html`), `git push`, acompanhar os jobs no Actions | Aba Actions; summary do deploy com a nova tag |
 | 5:00–6:30 | Kubernetes/Helm: `kubectl get all -n devops`, app no navegador, `helm test` | Minikube ligado antes da apresentação |
