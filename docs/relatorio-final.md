@@ -109,7 +109,7 @@ minikube service tarefas-devops-app -n devops --url
 
 ![Serviço rodando no Kubernetes (Minikube)](prints/etapa3-kubernetes-servico.png)
 
-O print mostra o Deployment com **2/2 réplicas**, o Service **NodePort 80:30080** e a resposta de `/api/info` com a versão `sha-d4a26c3`. A seguir, a validação com `helm lint` e `helm test`, e depois a aplicação aberta no navegador pelo NodePort:
+O print mostra o Deployment com **2/2 réplicas**, o Service **NodePort 80:30080** e a resposta de `/api/info` com a versão `sha-d4a26c3`. A seguir, a validação com `helm lint` e `helm test`, e depois a página da aplicação carregada pelo NodePort (`http://192.168.49.2:30080`):
 
 ![helm lint e helm test](prints/etapa3-helm-test.png)
 
