@@ -82,7 +82,7 @@ Historicamente, porém, o ágil se concentrou na relação entre o negócio e o 
 
 - **Portabilidade.** A mesma imagem roda no notebook, no runner do GitHub Actions e no cluster Kubernetes. Isso acaba com o "na minha máquina funciona".
 - **Leveza e velocidade.** Ambientes sobem e são destruídos em segundos. O pipeline cria um cluster Kubernetes inteiro (Kind), implanta, testa e apaga, tudo em pouco mais de 1 minuto.
-- **Imutabilidade e versionamento.** Cada imagem tem uma tag. Aqui a tag é o SHA do commit, por exemplo `sha-d4a26c3`, o que facilita rastrear e reverter versões.
+- **Imutabilidade e versionamento.** Cada imagem tem uma tag. Aqui a tag é o SHA do commit, por exemplo `sha-deda5ec`, o que facilita rastrear e reverter versões.
 - **Eficiência de recursos.** Cabem mais aplicações no mesmo servidor.
 - **Base para orquestração.** O Kubernetes escala, reinicia e atualiza containers automaticamente.
 

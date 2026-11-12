@@ -96,18 +96,18 @@ Uma API de tarefas em Node.js passa por um ciclo DevOps completo:
 
 Nenhuma etapa exige aprovação humana: é **Continuous Deployment**. Se a nova versão não ficar saudável, o `--atomic` faz o rollback sozinho.
 
-**Passo 9 – Serviço rodando no Kubernetes.** O cluster Kind do pipeline é apagado no fim do job, então a validação persistente foi feita no **Minikube** local, com a **mesma imagem que o pipeline publicou no GHCR** (`sha-d4a26c3`):
+**Passo 9 – Serviço rodando no Kubernetes.** O cluster Kind do pipeline é apagado no fim do job, então a validação persistente foi feita no **Minikube** local, com a **mesma imagem que o pipeline publicou no GHCR** (tag `latest`):
 
 ```bash
 minikube start
-helm upgrade --install tarefas helm/devops-app -n devops --create-namespace --set image.tag=sha-d4a26c3
+helm upgrade --install tarefas helm/devops-app -n devops --create-namespace --set image.tag=latest
 kubectl get all -n devops
 minikube service tarefas-devops-app -n devops --url
 ```
 
 ![Serviço rodando no Kubernetes (Minikube)](prints/etapa3-kubernetes-servico.png)
 
-O print mostra o Deployment com **2/2 réplicas**, o Service **NodePort 80:30080** e a resposta de `/api/info` com a versão `sha-d4a26c3`. A seguir, a validação com `helm lint` e `helm test`, e depois a página da aplicação carregada pelo NodePort (`http://192.168.49.2:30080`):
+O print mostra o Deployment com **2/2 réplicas**, o Service **NodePort 80:30080** e a resposta de `/api/info` com a versão da imagem em execução. A seguir, a validação com `helm lint` e `helm test`, e depois a página da aplicação carregada pelo NodePort (`http://192.168.49.2:30080`):
 
 ![helm lint e helm test](prints/etapa3-helm-test.png)
 
