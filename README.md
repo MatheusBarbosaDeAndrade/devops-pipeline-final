@@ -1,6 +1,18 @@
 # DevOps na Prática – Pipeline CI/CD, Kubernetes e Elastic Stack
 
-Projeto da **Atividade Avaliativa – DevOps na Prática** (disciplina DevOps Tools – UNAMA).
+Projeto da **Atividade Avaliativa – DevOps na Prática** (disciplina DevOps Tools – UNAMA,
+Prof. Rodrigo Silva Marques).
+
+## Integrantes
+
+| Nome | Matrícula |
+|------|-----------|
+| Matheus Barbosa de Andrade | |
+| [NOME DO INTEGRANTE 2] | |
+| [NOME DO INTEGRANTE 3] | |
+
+Curso: [NOME DO CURSO]
+
 Uma API de tarefas em Node.js atravessa um ciclo DevOps completo:
 
 ```
@@ -12,9 +24,20 @@ Uma API de tarefas em Node.js atravessa um ciclo DevOps completo:
 
 | Etapa | Entrega | Onde está |
 |-------|---------|-----------|
+| 1 – Conceitos | DevOps × Ágil, CI × CD (Delivery/Deployment), VMs × containers | [`docs/relatorio-etapa1.md`](docs/relatorio-etapa1.md) |
 | 2 – CI | Testes, build Docker e push para o GHCR | `.github/workflows/main.yml`, `app/` |
 | 3 – CD + orquestração | Chart Helm, deploy automático, NodePort 30080 | `helm/devops-app/`, job *deploy* do workflow |
-| 4 – Logging e métricas | Filebeat + Elasticsearch + Kibana, dashboard | `monitoring/` |
+| 4 – Logging e métricas | Filebeat + Elasticsearch + Kibana, dashboard (+ APM) | `monitoring/`, [`docs/aula5-entrega.md`](docs/aula5-entrega.md) |
+| 5 – Relatório final | Passo a passo, desafios, reflexão crítica, roteiro da apresentação | [`docs/relatorio-final.md`](docs/relatorio-final.md) |
+
+### Prints
+
+| Etapa | Print |
+|-------|-------|
+| 2 – Pipeline executado com sucesso | [`docs/prints/etapa2-pipeline.png`](docs/prints/etapa2-pipeline.png) |
+| 3 – Serviço rodando no Kubernetes | [`docs/prints/etapa3-kubernetes-servico.png`](docs/prints/etapa3-kubernetes-servico.png), [`etapa3-app-navegador.png`](docs/prints/etapa3-app-navegador.png), [`etapa3-helm-test.png`](docs/prints/etapa3-helm-test.png) |
+| 4 – Dashboard no Kibana | [`docs/prints/etapa4-dashboard-kibana.png`](docs/prints/etapa4-dashboard-kibana.png), [`etapa4-filebeat-coleta.png`](docs/prints/etapa4-filebeat-coleta.png) |
+| Extra – APM | [`docs/prints/aula5-apm-kibana.png`](docs/prints/aula5-apm-kibana.png) |
 
 ## Estrutura
 
@@ -32,7 +55,7 @@ Uma API de tarefas em Node.js atravessa um ciclo DevOps completo:
 │   ├── filebeat/filebeat.yml
 │   ├── gerar-trafego.sh         # gerador de tráfego para o dashboard
 │   └── kibana/                  # dashboard como código (.ndjson) + script de importação
-└── docs/prints/                 # print do pipeline executado no GitHub Actions
+└── docs/                        # relatórios (Markdown) e prints
 ```
 
 ## API
@@ -84,14 +107,15 @@ helm test tarefas -n devops --logs
 ### Elastic Stack (Etapa 4)
 ```bash
 cd monitoring
-docker compose up -d --build          # Elasticsearch, Kibana, Filebeat, app e gerador de tráfego
+docker compose up -d --build          # Elasticsearch, Kibana, Filebeat, APM Server, app e gerador de tráfego
 ./kibana/importar-dashboard.sh        # importa o dashboard "Tarefas API - Logs e Métricas"
 ```
 - Kibana: <http://localhost:5601/app/dashboards#/view/tarefas-dashboard>
 - Elasticsearch: <http://localhost:9200>
 - Aplicação: <http://localhost:3000>
+- APM: <http://localhost:5601/app/apm/services>
 
-Requer cerca de 3 GB de RAM livres (Elasticsearch limitado a 512 MB de heap).
+Requer cerca de 3,5 GB de RAM livres (Elasticsearch limitado a 512 MB de heap).
 Para encerrar: `docker compose down -v`.
 
 **Como os dados são coletados:** a aplicação grava cada requisição como uma linha JSON (campos ECS:
@@ -101,10 +125,13 @@ em `/var/log/app/app.log`. O **Filebeat** lê esse arquivo por meio de um volume
 **Elasticsearch** (data stream `filebeat-8.17.0`). O **Kibana** consulta esse índice e exibe o dashboard
 com atualização automática a cada 5 s.
 
-### APM (extra opcional)
-O agente `elastic-apm-node` é iniciado automaticamente quando a variável `ELASTIC_APM_SERVER_URL`
-está definida (ex.: `http://apm-server:8200`).
+### APM (extra da Aula 5)
+O agente `elastic-apm-node` é iniciado quando a variável `ELASTIC_APM_SERVER_URL` está definida.
+No Docker Compose ela aponta para o serviço `apm-server` (`http://apm-server:8200`), então as
+transações de cada rota (latência, throughput e erros com stack trace) aparecem em
+**Kibana → Observability → APM → devops-tarefas-api**. No Kubernetes a variável não é definida
+e o agente fica desligado.
 
 ## Tecnologias
 Node.js 20 · Express · Jest · Docker · GitHub Actions · GitHub Container Registry · Kubernetes
-(Kind / Minikube) · Helm 3 · Elasticsearch 8.17 · Kibana 8.17 · Filebeat 8.17
+(Kind / Minikube) · Helm 3 · Elasticsearch 8.17 · Kibana 8.17 · Filebeat 8.17 · APM Server 8.17

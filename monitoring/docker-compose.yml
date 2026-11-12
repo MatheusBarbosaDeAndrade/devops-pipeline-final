@@ -3,6 +3,7 @@
 #   app ──(grava JSON em /var/log/app/app.log)──► volume app-logs
 #   filebeat ──(lê o volume, decodifica o JSON)──► elasticsearch ──► kibana
 #   trafego  ──(gera requisições contínuas na app para alimentar o dashboard)
+#   app ──(agente elastic-apm-node)──► apm-server ──► elasticsearch  (APM, extra da Aula 5)
 #
 # Uso:  docker compose up -d   →  Kibana em http://localhost:5601
 name: devops-monitoring
@@ -42,6 +43,23 @@ services:
       timeout: 5s
       retries: 40
 
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:8.17.0
+    container_name: apm-server
+    command: >
+      apm-server -e --strict.perms=false
+        -E output.elasticsearch.hosts=["elasticsearch:9200"]
+        -E apm-server.host=0.0.0.0:8200
+        -E apm-server.kibana.enabled=true
+        -E apm-server.kibana.host=kibana:5601
+    ports:
+      - "8200:8200"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+
   app:
     build: ../app
     image: devops-tarefas-api:local
@@ -50,6 +68,7 @@ services:
     environment:
       - APP_ENV=docker-compose
       - LOG_FILE=/var/log/app/app.log
+      - ELASTIC_APM_SERVER_URL=http://apm-server:8200   # ativa o agente APM
     ports:
       - "3000:3000"
     volumes:
