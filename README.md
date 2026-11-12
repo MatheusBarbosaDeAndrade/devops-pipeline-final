@@ -12,11 +12,9 @@ Uma API de tarefas em Node.js atravessa um ciclo DevOps completo:
 
 | Etapa | Entrega | Onde está |
 |-------|---------|-----------|
-| 1 – Conceitos | Relatório (DevOps × Ágil, CI × CD, VMs × containers) | `docs/Relatorio-DevOps-na-Pratica.pdf` |
 | 2 – CI | Testes, build Docker e push para o GHCR | `.github/workflows/main.yml`, `app/` |
 | 3 – CD + orquestração | Chart Helm, deploy automático, NodePort 30080 | `helm/devops-app/`, job *deploy* do workflow |
 | 4 – Logging e métricas | Filebeat + Elasticsearch + Kibana, dashboard | `monitoring/` |
-| 5 – Relatório final | Passo a passo, desafios, reflexão crítica | `docs/` |
 
 ## Estrutura
 
@@ -34,7 +32,7 @@ Uma API de tarefas em Node.js atravessa um ciclo DevOps completo:
 │   ├── filebeat/filebeat.yml
 │   ├── gerar-trafego.sh         # gerador de tráfego para o dashboard
 │   └── kibana/                  # dashboard como código (.ndjson) + script de importação
-└── docs/                        # relatório ABNT (DOCX/PDF) e prints
+└── docs/prints/                 # print do pipeline executado no GitHub Actions
 ```
 
 ## API
