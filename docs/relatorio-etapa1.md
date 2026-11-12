@@ -88,7 +88,7 @@ Historicamente, porém, o ágil se concentrou na relação entre o negócio e o 
 
 > **Analogia: casa × apartamento.** Uma VM é uma **casa**: tem fundação, encanamento e estrutura próprios. É bem isolada, mas cara e demorada de construir. Containers são **apartamentos de um mesmo prédio**: compartilham a fundação e a estrutura (o kernel), mas cada um tem sua porta, sua chave e seus móveis (processos e arquivos isolados), e ficam prontos para morar muito mais rápido.
 
-**Exemplo no projeto.** Na Etapa 4, sete serviços sobem ao mesmo tempo com um único `docker compose up` num notebook de 8 GB de RAM: Elasticsearch, Kibana, Filebeat, APM Server, a aplicação e o gerador de tráfego. Fazer isso com sete VMs completas seria inviável.
+**Exemplo no projeto.** Na Etapa 4, seis serviços sobem ao mesmo tempo com um único `docker compose up` num notebook de 8 GB de RAM: Elasticsearch, Kibana, Filebeat, APM Server, a aplicação e o gerador de tráfego. Fazer isso com seis VMs completas seria inviável.
 
 ---
 

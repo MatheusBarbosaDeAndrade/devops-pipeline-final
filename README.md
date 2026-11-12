@@ -34,7 +34,7 @@ Uma API de tarefas em Node.js atravessa um ciclo DevOps completo:
 
 | Etapa | Print |
 |-------|-------|
-| 2 – Pipeline executado com sucesso | [`docs/prints/etapa2-pipeline.png`](docs/prints/etapa2-pipeline.png) |
+| 2 – Testes e pipeline executado com sucesso | [`docs/prints/etapa2-testes-locais.png`](docs/prints/etapa2-testes-locais.png), [`etapa2-pipeline.png`](docs/prints/etapa2-pipeline.png) |
 | 3 – Serviço rodando no Kubernetes | [`docs/prints/etapa3-kubernetes-servico.png`](docs/prints/etapa3-kubernetes-servico.png), [`etapa3-app-navegador.png`](docs/prints/etapa3-app-navegador.png), [`etapa3-helm-test.png`](docs/prints/etapa3-helm-test.png) |
 | 4 – Dashboard no Kibana | [`docs/prints/etapa4-dashboard-kibana.png`](docs/prints/etapa4-dashboard-kibana.png), [`etapa4-filebeat-coleta.png`](docs/prints/etapa4-filebeat-coleta.png) |
 | Extra – APM | [`docs/prints/aula5-apm-kibana.png`](docs/prints/aula5-apm-kibana.png) |
