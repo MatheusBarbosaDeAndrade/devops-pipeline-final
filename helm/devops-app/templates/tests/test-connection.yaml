@@ -1,0 +1,16 @@
+# Teste executado com "helm test <release>": chama o /health pelo Service
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "devops-app.fullname" . }}-test-connection"
+  labels:
+    {{- include "devops-app.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  restartPolicy: Never
+  containers:
+    - name: wget
+      image: busybox:1.36
+      command: ['wget', '-qO-', 'http://{{ include "devops-app.fullname" . }}:{{ .Values.service.port }}/health']

@@ -1,0 +1,56 @@
+# Valores padrão do chart. O pipeline (GitHub Actions) sobrescreve
+# image.repository e image.tag a cada execução com --set.
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/matheusbarbosadeandrade/devops-tarefas-api
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Segredo para baixar imagens privadas do GHCR (criado pelo pipeline)
+imagePullSecrets: []
+#  - name: ghcr-cred
+
+nameOverride: ""
+fullnameOverride: ""
+
+app:
+  port: 3000
+  environment: kubernetes
+  # Grava também em arquivo para coleta por um Filebeat (opcional)
+  logFile: ""
+
+service:
+  # NodePort expõe a aplicação fora do cluster (exigência da Etapa 3)
+  type: NodePort
+  port: 80
+  nodePort: 30080
+
+ingress:
+  enabled: false
+  className: nginx
+  host: tarefas.local
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 192Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]

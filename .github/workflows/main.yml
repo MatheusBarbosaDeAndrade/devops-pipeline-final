@@ -1,0 +1,227 @@
+# Pipeline CI/CD - Atividade Avaliativa "DevOps na Prática"
+#
+#  test ──► build-and-push ──► deploy (Kind + Helm)
+#   │            │                  │
+#   │            │                  └─ CD: publica a nova versão no Kubernetes e expõe via NodePort
+#   │            └─ build da imagem Docker e envio ao GitHub Container Registry (ghcr.io)
+#   └─ testes automatizados (Jest + Supertest) com cobertura mínima de 80%
+
+name: CI-CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: devops-tarefas-api
+  RELEASE: tarefas
+  NAMESPACE: devops
+
+jobs:
+  # ---------------------------------------------------------------- CI: testes
+  test:
+    name: 1. Testes automatizados
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Executar testes (Jest)
+        run: npm test
+
+      - name: Publicar relatório de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-testes
+          path: app/coverage/
+          retention-days: 7
+
+  # ------------------------------------------- CI: build Docker + push registry
+  build-and-push:
+    name: 2. Build Docker e push (GHCR)
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.vars.outputs.image }}
+      tag: ${{ steps.vars.outputs.tag }}
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Definir nome e tag da imagem
+        id: vars
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"   # o registry exige letras minúsculas
+          echo "image=${REGISTRY}/${OWNER}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login no GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Gerar tags e labels da imagem
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.vars.outputs.image }}
+          tags: |
+            type=raw,value=${{ steps.vars.outputs.tag }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build e push da imagem
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Resumo
+        run: |
+          echo "### Imagem Docker" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+  # --------------------------------------- CD: deploy no Kubernetes com Helm
+  deploy:
+    name: 3. Deploy no Kubernetes (Helm)
+    needs: build-and-push
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IMAGE: ${{ needs.build-and-push.outputs.image }}
+      TAG: ${{ needs.build-and-push.outputs.tag }}
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Criar cluster Kubernetes (Kind)
+        uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: devops
+          config: k8s/kind-config.yaml
+
+      - name: Configurar Helm
+        uses: azure/setup-helm@v4
+
+      - name: Preparar namespace e credencial do registry
+        run: |
+          kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n "$NAMESPACE" create secret docker-registry ghcr-cred \
+            --docker-server="$REGISTRY" \
+            --docker-username="${{ github.actor }}" \
+            --docker-password="${{ secrets.GITHUB_TOKEN }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Validar chart Helm
+        run: helm lint helm/devops-app
+
+      - name: Deploy / upgrade com Helm
+        run: |
+          helm upgrade --install "$RELEASE" helm/devops-app \
+            --namespace "$NAMESPACE" \
+            --set image.repository="$IMAGE" \
+            --set image.tag="$TAG" \
+            --set "imagePullSecrets[0].name=ghcr-cred" \
+            --wait --timeout 5m --atomic
+
+      - name: Verificar rollout e recursos
+        run: |
+          kubectl -n "$NAMESPACE" rollout status deployment/"$RELEASE"-devops-app --timeout=120s
+          kubectl -n "$NAMESPACE" get deploy,rs,pods,svc -o wide
+          helm list -n "$NAMESPACE"
+
+      - name: Teste de fumaça via NodePort (30080)
+        run: |
+          for i in $(seq 1 10); do
+            curl -fsS http://localhost:30080/health && break || sleep 3
+          done
+          echo
+          curl -fsS http://localhost:30080/api/info | tee info.json
+          echo
+          grep -q "\"versao\":\"$TAG\"" info.json && echo "Versão $TAG publicada com sucesso no cluster"
+
+      - name: Helm test
+        run: helm test "$RELEASE" -n "$NAMESPACE" --logs
+
+      - name: Resumo do deploy
+        if: always()
+        run: |
+          {
+            echo "### Deploy no Kubernetes"
+            echo "Release **$RELEASE** - imagem \`$IMAGE:$TAG\`"
+            echo '```'
+            kubectl -n "$NAMESPACE" get pods,svc -o wide
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ------------- CD opcional: deploy no Minikube local via runner self-hosted
+  # Ative criando a variável de repositório DEPLOY_MINIKUBE=true e registrando
+  # um runner self-hosted (Settings > Actions > Runners) na máquina do Minikube.
+  deploy-minikube:
+    name: 4. Deploy no Minikube local (opcional)
+    needs: build-and-push
+    if: github.event_name != 'pull_request' && vars.DEPLOY_MINIKUBE == 'true'
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IMAGE: ${{ needs.build-and-push.outputs.image }}
+      TAG: ${{ needs.build-and-push.outputs.tag }}
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Credencial do registry
+        run: |
+          kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n "$NAMESPACE" create secret docker-registry ghcr-cred \
+            --docker-server="$REGISTRY" \
+            --docker-username="${{ github.actor }}" \
+            --docker-password="${{ secrets.GITHUB_TOKEN }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy / upgrade com Helm
+        run: |
+          helm upgrade --install "$RELEASE" helm/devops-app \
+            --namespace "$NAMESPACE" \
+            --set image.repository="$IMAGE" \
+            --set image.tag="$TAG" \
+            --set "imagePullSecrets[0].name=ghcr-cred" \
+            --wait --timeout 5m --atomic
+          kubectl -n "$NAMESPACE" get pods,svc -o wide

@@ -1,0 +1,36 @@
+# Filebeat – coleta os logs JSON da API de Tarefas e envia ao Elasticsearch
+filebeat.inputs:
+  - type: filestream
+    id: tarefas-api-logs
+    paths:
+      - /var/log/app/*.log
+    parsers:
+      # Cada linha é um objeto JSON (NDJSON); os campos vão para a raiz do evento
+      - ndjson:
+          target: ""
+          overwrite_keys: true
+          add_error_key: true
+    fields:
+      origem: tarefas-api
+    fields_under_root: true
+
+processors:
+  - add_host_metadata: ~
+  - drop_fields:
+      fields: ["agent.ephemeral_id", "ecs.version"]
+      ignore_missing: true
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+
+# Garante o tipo numérico decimal para o tempo de resposta (campo próprio da app)
+setup.template.append_fields:
+  - name: response_time_ms
+    type: float
+  - name: origem
+    type: keyword
+
+setup.kibana:
+  host: "http://kibana:5601"
+
+logging.level: info

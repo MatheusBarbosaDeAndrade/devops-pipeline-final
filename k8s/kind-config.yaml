@@ -1,0 +1,10 @@
+# Cluster Kind de 1 nó com o NodePort 30080 mapeado para a máquina host,
+# permitindo acessar a aplicação em http://localhost:30080
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP

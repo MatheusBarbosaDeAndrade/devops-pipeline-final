@@ -1,0 +1,10 @@
+A aplicação {{ include "devops-app.fullname" . }} (versão {{ .Values.image.tag }}) foi implantada!
+
+{{- if eq .Values.service.type "NodePort" }}
+Acesse pelo NodePort {{ .Values.service.nodePort }}:
+  Minikube: minikube service {{ include "devops-app.fullname" . }} -n {{ .Release.Namespace }} --url
+  Kind/outros: http://<IP-do-nó>:{{ .Values.service.nodePort }}
+{{- end }}
+
+Verifique os recursos:
+  kubectl get deploy,pods,svc -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}

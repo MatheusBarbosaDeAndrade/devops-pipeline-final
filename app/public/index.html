@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tarefas DevOps</title>
+  <style>
+    :root { --bg:#f4f6f8; --card:#fff; --txt:#1d2733; --muted:#5b6b7c; --accent:#2f7d32; --line:#dde3ea; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--txt); }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
+    h1 { margin: 0 0 4px; font-size: 1.6rem; }
+    .sub { color: var(--muted); margin: 0 0 24px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px; margin-bottom:16px; }
+    .info { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:12px; }
+    .info div span { display:block; font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+    .info div strong { font-size:1rem; word-break: break-all; }
+    form { display:flex; gap:8px; }
+    input { flex:1; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:1rem; }
+    button { padding:10px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-size:1rem; cursor:pointer; }
+    ul { list-style:none; padding:0; margin:16px 0 0; }
+    li { display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--line); }
+    li.feita span { text-decoration: line-through; color: var(--muted); }
+    li span { flex:1; }
+    li button { background:#b3261e; padding:6px 10px; font-size:.85rem; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Tarefas DevOps</h1>
+  <p class="sub">Aplicação de demonstração do pipeline CI/CD → Kubernetes (Helm) → Elastic Stack</p>
+
+  <section class="card info" id="info">
+    <div><span>Versão</span><strong id="versao">–</strong></div>
+    <div><span>Ambiente</span><strong id="ambiente">–</strong></div>
+    <div><span>Pod / host</span><strong id="pod">–</strong></div>
+    <div><span>Requisições</span><strong id="req">–</strong></div>
+  </section>
+
+  <section class="card">
+    <form id="form">
+      <input id="titulo" placeholder="Nova tarefa..." autocomplete="off" required>
+      <button type="submit">Adicionar</button>
+    </form>
+    <ul id="lista"></ul>
+  </section>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  async function carregarInfo() {
+    const i = await (await fetch('/api/info')).json();
+    $('versao').textContent = i.versao; $('ambiente').textContent = i.ambiente;
+    $('pod').textContent = i.pod; $('req').textContent = i.requisicoes;
+  }
+  async function carregar() {
+    const tarefas = await (await fetch('/api/tarefas')).json();
+    $('lista').innerHTML = '';
+    for (const t of tarefas) {
+      const li = document.createElement('li');
+      if (t.concluida) li.className = 'feita';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = t.concluida; cb.style.flex = '0';
+      cb.onchange = async () => { await fetch('/api/tarefas/' + t.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ concluida: cb.checked }) }); carregar(); };
+      const sp = document.createElement('span'); sp.textContent = t.titulo;
+      const del = document.createElement('button'); del.textContent = 'Excluir';
+      del.onclick = async () => { await fetch('/api/tarefas/' + t.id, { method: 'DELETE' }); carregar(); };
+      li.append(cb, sp, del); $('lista').append(li);
+    }
+    carregarInfo();
+  }
+  $('form').onsubmit = async (e) => {
+    e.preventDefault();
+    await fetch('/api/tarefas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo: $('titulo').value }) });
+    $('titulo').value = ''; carregar();
+  };
+  carregar();
+</script>
+</body>
+</html>

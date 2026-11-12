@@ -1,0 +1,12 @@
+node_modules/
+coverage/
+logs/
+*.log
+.env
+.DS_Store
+# Materiais do professor (não fazem parte do código entregue)
+instrucoes/
+# Arquivos temporários do LibreOffice/Word
+~$*
+.~lock.*
+.relatorio-gerador/

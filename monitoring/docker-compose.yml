@@ -1,0 +1,85 @@
+# Etapa 4 – Logging e Métricas com Elastic Stack (Filebeat + Elasticsearch + Kibana)
+#
+#   app ──(grava JSON em /var/log/app/app.log)──► volume app-logs
+#   filebeat ──(lê o volume, decodifica o JSON)──► elasticsearch ──► kibana
+#   trafego  ──(gera requisições contínuas na app para alimentar o dashboard)
+#
+# Uso:  docker compose up -d   →  Kibana em http://localhost:5601
+name: devops-monitoring
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false        # apenas para ambiente acadêmico/local
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - cluster.routing.allocation.disk.threshold_enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.17.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:5601/api/status | grep -q '\"level\":\"available\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+
+  app:
+    build: ../app
+    image: devops-tarefas-api:local
+    pull_policy: build
+    container_name: app
+    environment:
+      - APP_ENV=docker-compose
+      - LOG_FILE=/var/log/app/app.log
+    ports:
+      - "3000:3000"
+    volumes:
+      - app-logs:/var/log/app
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.17.0
+    container_name: filebeat
+    user: root
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - app-logs:/var/log/app:ro
+      - filebeat-data:/usr/share/filebeat/data
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      app:
+        condition: service_started
+
+  trafego:
+    image: curlimages/curl:8.11.1
+    container_name: trafego
+    entrypoint: ["/bin/sh", "/gerar-trafego.sh"]
+    volumes:
+      - ./gerar-trafego.sh:/gerar-trafego.sh:ro
+    depends_on:
+      - app
+
+volumes:
+  es-data:
+  app-logs:
+  filebeat-data:
