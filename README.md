@@ -7,6 +7,8 @@ Prof. Rodrigo Silva Marques).
 
 | Nome | Matrícula |
 |------|-----------|
+| | |
+| Caique Pinto da Costa | 04135745 |
 | Matheus Barbosa de Andrade | |
 | Thalison Ribeiro Mendes | |
 | [NOME DO INTEGRANTE 3] | |
