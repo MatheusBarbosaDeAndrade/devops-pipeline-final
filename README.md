@@ -13,7 +13,7 @@ Prof. Rodrigo Silva Marques).
 | Thalison Ribeiro Mendes | 04146790 |
 
 
-Curso: [NOME DO CURSO]
+Curso: CIÊNCIA DA COMPUTAÇÃO
 
 Uma API de tarefas em Node.js atravessa um ciclo DevOps completo:
 
