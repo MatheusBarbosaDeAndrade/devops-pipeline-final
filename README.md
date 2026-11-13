@@ -8,7 +8,7 @@ Prof. Rodrigo Silva Marques).
 | Nome | Matrícula |
 |------|-----------|
 | Matheus Barbosa de Andrade | |
-| THALISON RIBEIRO MENDES | |
+| Thalison Ribeiro Mendes | |
 | [NOME DO INTEGRANTE 3] | |
 
 Curso: [NOME DO CURSO]
