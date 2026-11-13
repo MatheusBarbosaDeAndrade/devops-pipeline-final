@@ -7,10 +7,11 @@ Prof. Rodrigo Silva Marques).
 
 | Nome | Matrícula |
 |------|-----------|
+| Breno Luiz da Silva Ferreira | 04135868 |
 | Caique Pinto da Costa | 04135745 |
 | Matheus Barbosa de Andrade | 04126063 |
 | Thalison Ribeiro Mendes | 04146790 |
-| Breno Luiz da Silva Ferreira | 04135868 |
+
 
 Curso: [NOME DO CURSO]
 
