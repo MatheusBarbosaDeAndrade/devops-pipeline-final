@@ -9,7 +9,7 @@ Prof. Rodrigo Silva Marques).
 |------|-----------|
 | Matheus Barbosa de Andrade | |
 | Thalison Ribeiro Mendes | |
-| [NOME DO INTEGRANTE 3] | |
+| Breno Luiz da Silva Ferreira | 04135868 |
 
 Curso: [NOME DO CURSO]
 
