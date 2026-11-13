@@ -8,7 +8,7 @@ Prof. Rodrigo Silva Marques).
 | Nome | Matrícula |
 |------|-----------|
 | Matheus Barbosa de Andrade | |
-| Thalison Ribeiro Mendes | |
+| Thalison Ribeiro Mendes | 04146790 |
 | Breno Luiz da Silva Ferreira | 04135868 |
 
 Curso: [NOME DO CURSO]
