@@ -9,11 +9,12 @@ Prof. Rodrigo Silva Marques).
 |------|-----------|
 | Breno Luiz da Silva Ferreira | 04135868 |
 | Caique Pinto da Costa | 04135745 |
+| Felipe Santos de Moura | 04129222 |
 | Matheus Barbosa de Andrade | 04126063 |
 | Thalison Ribeiro Mendes | 04146790 |
 
 
-Curso: [NOME DO CURSO]
+Curso: [Ciencia da Computação]
 
 Uma API de tarefas em Node.js atravessa um ciclo DevOps completo:
 
